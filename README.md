@@ -18,13 +18,31 @@ Laboratório reproduzível de Active Directory para estudo autorizado de ataques
 
 ## Demonstração
 
-Para gravar uma demonstração terminal com [asciinema](https://asciinema.org/):
+No Windows, a opção mais simples é gravar a janela do PowerShell com
+[ScreenToGif](https://www.screentogif.com/). Execute a sequência abaixo dentro de
+`C:\Users\Gustavo\Projects\AD-Lab`:
 
 ```bash
+make down
+make up
+make logs
+make attack
+make report
+make down
+```
+
+Para usar [asciinema](https://asciinema.org/), abra o projeto no WSL (ou Linux)
+e instale-o nesse ambiente. O comando não fica disponível automaticamente no
+PowerShell:
+
+```bash
+cd /mnt/c/Users/Gustavo/Projects/AD-Lab
+sudo apt update && sudo apt install -y asciinema
 asciinema rec demo.cast -c ./demo-asciinema.sh
 ```
 
-O script executa `make down`, `make up`, a cadeia de ataques, `make report` e `make down`. Publique o arquivo `.cast` no asciinema.org e substitua este bloco pelo embed gerado:
+O script executa `make down`, `make up`, a cadeia de ataques, `make report` e `make down`.
+Publique o arquivo `.cast` no asciinema.org e substitua este bloco pelo embed gerado:
 
 ```text
 https://asciinema.org/a/SEU_ID
