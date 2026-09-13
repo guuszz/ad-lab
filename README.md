@@ -1,8 +1,34 @@
 # ad-lab
 
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![Make](https://img.shields.io/badge/Build-Make-427819?logo=gnu&logoColor=white)](https://www.gnu.org/software/make/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Laboratório reproduzível de Active Directory para estudo autorizado de ataques ofensivos. O modo padrão usa Samba 4 como Domain Controller dentro de Docker.
 
 > **Aviso:** rede isolada e uso exclusivamente educacional. Não use estas técnicas contra alvos reais.
+
+## O que este lab demonstra
+
+- Infraestrutura como código com Docker Compose e scripts idempotentes.
+- Provisionamento em camadas: domínio, usuários, GPP e ACL.
+- GPP real com `cpassword` no SYSVOL usando a chave AES pública da Microsoft.
+- Abuso efetivo de `GenericAll` para resetar a senha de `svc_backup`.
+- Execução automatizada e relatório consolidado em `attacks/report.md`.
+
+## Demonstração
+
+Para gravar uma demonstração terminal com [asciinema](https://asciinema.org/):
+
+```bash
+asciinema rec demo.cast -c ./demo-asciinema.sh
+```
+
+O script executa `make down`, `make up`, a cadeia de ataques, `make report` e `make down`. Publique o arquivo `.cast` no asciinema.org e substitua este bloco pelo embed gerado:
+
+```text
+https://asciinema.org/a/SEU_ID
+```
 
 ## Arquitetura
 
@@ -70,20 +96,11 @@ Rubeus é uma implementação Windows/.NET. A tentativa de compilá-lo no Kali c
 
 Samba não implementa Enterprise AD CS, portanto ESC1 não pode ser reproduzido neste modo. Técnicas dependentes de workstations Windows, como `AlwaysInstallElevated`, serviços vulneráveis e tarefas agendadas, também ficam fora do escopo.
 
-## O que o lab demonstra
-
-- Infraestrutura como código com Docker Compose e scripts idempotentes.
-- Provisionamento em camadas: domínio, usuários, GPP e ACL.
-- GPP real com `cpassword` no SYSVOL usando a chave AES pública da Microsoft.
-- Abuso efetivo de `GenericAll` para resetar a senha de `svc_backup`.
-- Execução automatizada e relatório consolidado em `attacks/report.md`.
-
 ## Roadmap
 
 - [ ] Windows AD real via Terraform + Azure, cobrindo AS-REP, Kerberoast e ADCS ESC1.
 - [ ] CI/CD com GitHub Actions para validar `make up && make attack`.
 - [ ] Shadow credentials, RBCD e delegações.
-- [ ] Demonstração asciinema/GIF.
 
 ## Referências
 
