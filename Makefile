@@ -26,13 +26,13 @@ status:
 provision: up
 
 attack:
-	docker exec lab-attacker bash /opt/attacks/run-all.sh
+	MSYS_NO_PATHCONV=1 docker exec lab-attacker bash /opt/attacks/run-all.sh
 
 attack-shell:
 	docker exec -it lab-attacker bash
 
 report:
-	docker exec lab-attacker cat /opt/attacks/report.md
+	MSYS_NO_PATHCONV=1 docker exec lab-attacker cat /opt/attacks/report.md
 
 clean: down
 	$(COMPOSE) down -v
