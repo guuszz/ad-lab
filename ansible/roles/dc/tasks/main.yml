@@ -1,0 +1,82 @@
+---
+- name: Install AD DS and management tools
+  ansible.windows.win_feature:
+    name:
+      - AD-Domain-Services
+      - RSAT-AD-Tools
+    include_management_tools: true
+    state: present
+
+- name: Check whether the domain already exists
+  ansible.windows.win_shell: |
+    $domain = Get-ADDomain -ErrorAction SilentlyContinue
+    if ($domain) { 'present' } else { 'absent' }
+  register: domain_state
+  changed_when: false
+  failed_when: false
+
+- name: Promote server to a new forest
+  ansible.windows.win_domain:
+    dns_domain_name: "{{ domain_name }}"
+    domain_netbios_name: "{{ netbios_name }}"
+    safe_mode_admin_password: "{{ lab_password }}"
+    database_path: C:\\Windows\\NTDS
+    sysvol_path: C:\\Windows\\SYSVOL
+  when: "'present' not in domain_state.stdout"
+  register: domain_promotion
+
+- name: Reboot after domain promotion
+  ansible.windows.win_reboot:
+    reboot_timeout: 1800
+  when: domain_promotion is changed
+
+- name: Wait for AD Web Services
+  ansible.windows.win_service:
+    name: ADWS
+    state: started
+
+- name: Create lab objects and vulnerable configurations
+  ansible.windows.win_powershell:
+    script: |
+      Import-Module ActiveDirectory
+      $base = "DC={{ domain_name.split('.')[0] }},DC={{ domain_name.split('.')[1] }}"
+      $ou = "OU=Empresa,$base"
+      if (-not (Get-ADOrganizationalUnit -Identity $ou -ErrorAction SilentlyContinue)) {
+        New-ADOrganizationalUnit -Name Empresa -Path $base
+      }
+
+      $users = @(
+        @{Name='Joao Silva'; Sam='joao.silva'},
+        @{Name='Maria Santos'; Sam='maria.santos'},
+        @{Name='Carlos Pereira'; Sam='carlos.pereira'},
+        @{Name='Ana Costa'; Sam='ana.costa'},
+        @{Name='Service Backup'; Sam='svc_backup'}
+      )
+      foreach ($user in $users) {
+        if (-not (Get-ADUser -Identity $user.Sam -ErrorAction SilentlyContinue)) {
+          New-ADUser -Name $user.Name -SamAccountName $user.Sam -UserPrincipalName "$($user.Sam)@{{ domain_name }}" -Path $ou -AccountPassword (ConvertTo-SecureString '{{ lab_password }}' -AsPlainText -Force) -Enabled $true
+        }
+      }
+
+      foreach ($group in @('TI', 'Financeiro')) {
+        if (-not (Get-ADGroup -Identity $group -ErrorAction SilentlyContinue)) {
+          New-ADGroup -Name $group -GroupScope Global -GroupCategory Security -Path $ou
+        }
+      }
+      Add-ADGroupMember -Identity TI -Members joao.silva -ErrorAction SilentlyContinue
+      Add-ADGroupMember -Identity Financeiro -Members maria.santos -ErrorAction SilentlyContinue
+
+      Set-ADAccountControl -Identity joao.silva -DoesNotRequirePreAuth $true
+      Set-ADUser -Identity ana.costa -Description 'Senha de treinamento: Lab@2024!'
+      Set-ADUser -Identity svc_backup -ServicePrincipalNames @{Add='cifs/dc01.{{ domain_name }}'}
+
+      $acl = Get-Acl "AD:$ou"
+      $target = Get-ADUser carlos.pereira
+      $sid = (Get-ADGroup TI).SID
+      $rule = New-Object System.DirectoryServices.ActiveDirectoryAccessRule($sid, 'GenericAll', 'Allow', $target.ObjectGuid, 'All')
+      $targetPath = "AD:$($target.DistinguishedName)"
+      $targetAcl = Get-Acl $targetPath
+      if (-not ($targetAcl.Access | Where-Object { $_.IdentityReference -match 'TI' -and $_.ActiveDirectoryRights -match 'GenericAll' })) {
+        $targetAcl.AddAccessRule($rule)
+        Set-Acl -Path $targetPath -AclObject $targetAcl
+      }

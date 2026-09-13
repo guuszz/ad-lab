@@ -1,0 +1,6 @@
+---
+- name: Provision domain workstations
+  hosts: workstations
+  gather_facts: false
+  roles:
+    - ws

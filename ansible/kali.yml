@@ -1,0 +1,7 @@
+---
+- name: Provision Kali attacker VM
+  hosts: kali
+  become: true
+  gather_facts: true
+  roles:
+    - kali

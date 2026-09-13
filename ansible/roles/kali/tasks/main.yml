@@ -1,0 +1,38 @@
+---
+- name: Install attack tooling
+  ansible.builtin.apt:
+    name:
+      - impacket-scripts
+      - bloodhound
+      - netexec
+      - responder
+      - kerbrute
+      - ldap-utils
+      - powershell
+      - git
+    state: present
+    update_cache: true
+
+- name: Copy attack scripts
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../attacks/"
+    dest: /opt/attacks/
+    mode: '0755'
+
+- name: Add lab hostnames
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    marker: '# {mark} AD-LAB'
+    block: |
+      192.168.56.10 dc01.lab.local dc01
+      192.168.56.20 ws01.lab.local ws01
+      192.168.56.21 ws02.lab.local ws02
+
+- name: Add convenience aliases
+  ansible.builtin.blockinfile:
+    path: /home/vagrant/.bashrc
+    marker: '# {mark} AD-LAB'
+    block: |
+      alias dc01='ping -c 1 dc01'
+      alias ws01='ping -c 1 ws01'
+      export LAB_DOMAIN='lab.local'

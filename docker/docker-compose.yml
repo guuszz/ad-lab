@@ -1,0 +1,51 @@
+services:
+  dc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lab-dc01
+    hostname: dc01
+    domainname: lab.local
+    restart: unless-stopped
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - samba_data:/var/lib/samba
+      - samba_etc:/etc/samba
+      - samba_sysvol:/var/lib/samba/sysvol
+    networks:
+      lab_net:
+        ipv4_address: 172.30.0.10
+
+  attacker:
+    build:
+      context: ./attacker
+      dockerfile: Dockerfile
+    container_name: lab-attacker
+    hostname: kali
+    restart: unless-stopped
+    depends_on:
+      - dc
+    dns:
+      - 172.30.0.10
+    volumes:
+      - ../attacks:/opt/attacks
+    networks:
+      lab_net:
+        ipv4_address: 172.30.0.50
+    command: sleep infinity
+
+networks:
+  lab_net:
+    name: ad-lab_net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  samba_data:
+  samba_etc:
+  samba_sysvol:

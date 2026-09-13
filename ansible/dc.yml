@@ -1,0 +1,6 @@
+---
+- name: Provision domain controller
+  hosts: domain_controllers
+  gather_facts: false
+  roles:
+    - dc

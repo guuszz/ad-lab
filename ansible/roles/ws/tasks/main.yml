@@ -1,0 +1,58 @@
+---
+- name: Enable WinRM firewall access
+  ansible.windows.win_firewall_rule:
+    name: WinRM-HTTP-In-TCP
+    localport: 5985
+    action: allow
+    direction: in
+    protocol: TCP
+    state: present
+    enabled: true
+
+- name: Join workstation to lab domain
+  ansible.windows.win_domain_membership:
+    dns_domain_name: "{{ domain_name }}"
+    domain_admin_user: "{{ netbios_name }}\\vagrant"
+    domain_admin_password: "{{ lab_password }}"
+    hostname: "{{ inventory_hostname | upper }}"
+    state: domain
+  register: domain_join
+
+- name: Reboot after domain join
+  ansible.windows.win_reboot:
+  when: domain_join.reboot_required
+
+- name: Enable AlwaysInstallElevated policy keys
+  ansible.windows.win_regedit:
+    path: "{{ item.path }}"
+    name: AlwaysInstallElevated
+    data: 1
+    type: dword
+  loop:
+    - { path: 'HKLM:\\Software\\Policies\\Microsoft\\Windows\\Installer' }
+    - { path: 'HKCU:\\Software\\Policies\\Microsoft\\Windows\\Installer' }
+
+- name: Create writable lab tools directory
+  ansible.windows.win_file:
+    path: C:\\LabTools
+    state: directory
+
+- name: Create intentionally vulnerable scheduled task
+  ansible.windows.win_scheduled_task:
+    name: Lab Updater
+    description: Training task with a writable executable location.
+    actions:
+      - path: C:\\LabTools\\updater.exe
+    triggers:
+      - type: boot
+    username: SYSTEM
+    run_level: highest
+    state: present
+
+- name: Create intentionally unquoted service path
+  ansible.windows.win_service:
+    name: LabUpdater
+    display_name: Lab Updater Service
+    path: 'C:\\Program Files\\Lab Updater\\updater.exe'
+    start_mode: auto
+    state: stopped
