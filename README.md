@@ -4,6 +4,8 @@
 [![Make](https://img.shields.io/badge/Build-Make-427819?logo=gnu&logoColor=white)](https://www.gnu.org/software/make/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+![Demo do laboratório](demo.gif)
+
 Laboratório reproduzível de Active Directory para estudo autorizado de ataques ofensivos. O modo padrão usa Samba 4 como Domain Controller dentro de Docker.
 
 > **Aviso:** rede isolada e uso exclusivamente educacional. Não use estas técnicas contra alvos reais.
